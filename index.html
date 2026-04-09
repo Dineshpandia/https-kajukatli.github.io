@@ -1664,7 +1664,7 @@ body.dog .fc-note{color:#2d1800;background:rgba(255,220,150,.2);}
   position: relative;
   height: 520px;
   overflow: hidden;
-  background: #000;
+  background: radial-gradient(circle at center, #020617, #000);
   cursor: grab;
 }
 
@@ -1681,7 +1681,7 @@ canvas {
   font-size: 18px;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.3s ease;
   text-shadow: 0 0 12px rgba(255,200,240,0.9);
 }
 
@@ -1716,10 +1716,8 @@ function resize() {
 resize();
 window.addEventListener("resize", resize);
 
-/* 🌍 ROTATION */
-let rotY = 0;
-let isDragging = false;
-let lastX = 0;
+/* ROTATION */
+let rotY = 0, isDragging = false, lastX = 0;
 
 canvas.addEventListener("mousedown", e => {
   isDragging = true;
@@ -1729,158 +1727,139 @@ window.addEventListener("mouseup", () => isDragging = false);
 
 window.addEventListener("mousemove", e => {
   if (isDragging) {
-    let dx = e.clientX - lastX;
-    rotY += dx * 0.005;
+    rotY += (e.clientX - lastX) * 0.004;
     lastX = e.clientX;
   }
 });
 
-/* 📱 GYROSCOPE */
-if (window.DeviceOrientationEvent) {
-  window.addEventListener("deviceorientation", e => {
-    if (e.gamma) {
-      rotY = e.gamma * 0.02;
-    }
-  });
-}
-
-/* ⭐ STAR SPHERE */
+/* STARS */
 let stars = [];
-for (let i = 0; i < 900; i++) {
+for (let i = 0; i < 700; i++) {
   let t = Math.random() * Math.PI * 2;
   let p = Math.acos((Math.random() * 2) - 1);
-
   stars.push({
     x: Math.sin(p) * Math.cos(t),
     y: Math.sin(p) * Math.sin(t),
-    z: Math.cos(p)
+    z: Math.cos(p),
+    size: Math.random()*1.5+0.5
   });
 }
 
-/* 🌌 MILKY WAY BAND */
-let milky = [];
-for (let i = 0; i < 300; i++) {
-  let angle = Math.random() * Math.PI * 2;
-  milky.push({
-    x: Math.cos(angle),
-    y: (Math.random() - 0.5) * 0.2,
-    z: Math.sin(angle)
-  });
-}
+/* POSITIONS */
+const moon = {x:0,y:0,z:1};
+const nebula = {x:0,y:0,z:-1};
 
-/* 🌕 + 💜 */
-const moon = { x: 0, y: 0, z: 1 };
-const nebula = { x: 0, y: 0, z: -1 };
-
-/* 🌠 Shooting stars */
-let shooting = [];
-setInterval(() => {
-  shooting.push({
-    x: Math.random() * w,
-    y: 0,
-    len: 80,
-    speed: 6
-  });
-}, 4000);
-
-/* 🔄 ROTATION */
-function rotateY(p, a) {
+/* ROTATE */
+function rotateY(p,a){
   return {
-    x: p.x * Math.cos(a) - p.z * Math.sin(a),
-    y: p.y,
-    z: p.x * Math.sin(a) + p.z * Math.cos(a)
-  };
+    x:p.x*Math.cos(a)-p.z*Math.sin(a),
+    y:p.y,
+    z:p.x*Math.sin(a)+p.z*Math.cos(a)
+  }
 }
 
-/* 🎬 DRAW */
-function draw() {
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  ctx.fillRect(0, 0, w, h);
+/* 🌕 REALISTIC MOON */
+function drawMoon(mx,my){
+  // glow
+  let glow = ctx.createRadialGradient(mx,my,10,mx,my,140);
+  glow.addColorStop(0,"rgba(255,240,180,0.9)");
+  glow.addColorStop(1,"rgba(255,240,180,0)");
+  ctx.fillStyle = glow;
+  ctx.beginPath();
+  ctx.arc(mx,my,140,0,Math.PI*2);
+  ctx.fill();
 
-  /* ⭐ Stars */
-  stars.forEach(s => {
-    let r = rotateY(s, rotY);
-    if (r.z > 0) {
-      let px = r.x * 320 + w/2;
-      let py = r.y * 320 + h/2;
-      let size = (1 - r.z) * 2;
+  // base
+  let grad = ctx.createRadialGradient(mx-20,my-20,10,mx,my,70);
+  grad.addColorStop(0,"#fffdf7");
+  grad.addColorStop(0.5,"#d8d2c2");
+  grad.addColorStop(1,"#8f8775");
+  ctx.fillStyle = grad;
+  ctx.beginPath();
+  ctx.arc(mx,my,60,0,Math.PI*2);
+  ctx.fill();
 
-      ctx.fillStyle = "white";
-      ctx.fillRect(px, py, size, size);
-    }
-  });
+  // craters (layered)
+  for(let i=0;i<12;i++){
+    let cx = mx + (Math.random()-0.5)*80;
+    let cy = my + (Math.random()-0.5)*80;
+    let r = Math.random()*6+2;
 
-  /* 🌌 Milky Way */
-  milky.forEach(s => {
-    let r = rotateY(s, rotY);
-    if (r.z > 0) {
-      let px = r.x * 320 + w/2;
-      let py = r.y * 320 + h/2;
-
-      ctx.fillStyle = "rgba(255,255,255,0.15)";
-      ctx.fillRect(px, py, 2, 2);
-    }
-  });
-
-  /* 💜 Nebula (back side only) */
-  let n = rotateY(nebula, rotY);
-  if (n.z > 0) {
-    let nx = n.x * 200 + w/2;
-    let ny = n.y * 200 + h/2;
-
-    let grad = ctx.createRadialGradient(nx, ny, 50, nx, ny, 350);
-    grad.addColorStop(0, "rgba(140,80,255,0.35)");
-    grad.addColorStop(0.5, "rgba(255,100,200,0.25)");
-    grad.addColorStop(1, "transparent");
-
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = "rgba(120,110,100,0.25)";
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fill();
   }
 
-  /* 🌕 Moon */
-  let m = rotateY(moon, rotY);
-  let label = document.getElementById("label");
+  // shadow edge (realism)
+  let shadow = ctx.createRadialGradient(mx+30,my+20,10,mx,my,80);
+  shadow.addColorStop(0,"rgba(0,0,0,0)");
+  shadow.addColorStop(1,"rgba(0,0,0,0.4)");
+  ctx.fillStyle = shadow;
+  ctx.beginPath();
+  ctx.arc(mx,my,60,0,Math.PI*2);
+  ctx.fill();
+}
 
-  if (m.z > 0) {
-    let mx = m.x * 260 + w/2;
-    let my = m.y * 260 + h/2;
+/* 💜 REAL NEBULA (LAYERED) */
+function drawNebula(nx,ny){
+  for(let i=0;i<4;i++){
+    let g = ctx.createRadialGradient(
+      nx + (Math.random()-0.5)*80,
+      ny + (Math.random()-0.5)*80,
+      20,
+      nx,ny,300
+    );
 
-    let g = ctx.createRadialGradient(mx, my, 10, mx, my, 140);
-    g.addColorStop(0, "rgba(255,240,180,0.9)");
-    g.addColorStop(1, "rgba(255,240,180,0)");
+    g.addColorStop(0,"rgba(140,80,255,0.25)");
+    g.addColorStop(0.5,"rgba(255,100,200,0.18)");
+    g.addColorStop(1,"transparent");
 
     ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.arc(mx, my, 140, 0, Math.PI*2);
-    ctx.fill();
+    ctx.fillRect(0,0,w,h);
+  }
+}
 
-    ctx.fillStyle = "#ddd6c5";
-    ctx.beginPath();
-    ctx.arc(mx, my, 65, 0, Math.PI*2);
-    ctx.fill();
+/* DRAW */
+function draw(){
+  ctx.fillStyle="rgba(0,0,0,0.5)";
+  ctx.fillRect(0,0,w,h);
 
-    /* TEXT LOCK */
-    label.style.opacity = 1;
-    label.style.left = (mx - 120) + "px";
-    label.style.top = (my - 20) + "px";
+  /* stars */
+  stars.forEach(s=>{
+    let r=rotateY(s,rotY);
+    if(r.z>-0.2){
+      let px=r.x*300+w/2;
+      let py=r.y*300+h/2;
+      ctx.fillStyle="white";
+      ctx.beginPath();
+      ctx.arc(px,py,s.size,0,Math.PI*2);
+      ctx.fill();
+    }
+  });
 
-  } else {
-    label.style.opacity = 0;
+  /* nebula */
+  let n=rotateY(nebula,rotY);
+  if(n.z>0){
+    drawNebula(n.x*200+w/2,n.y*200+h/2);
   }
 
-  /* 🌠 Shooting stars */
-  shooting.forEach((s, i) => {
-    ctx.strokeStyle = "white";
-    ctx.beginPath();
-    ctx.moveTo(s.x, s.y);
-    ctx.lineTo(s.x - s.len, s.y - s.len);
-    ctx.stroke();
+  /* moon */
+  let m=rotateY(moon,rotY);
+  let label=document.getElementById("label");
 
-    s.x += s.speed;
-    s.y += s.speed;
+  if(m.z>0){
+    let mx=m.x*250+w/2;
+    let my=m.y*250+h/2;
 
-    if (s.y > h) shooting.splice(i,1);
-  });
+    drawMoon(mx,my);
+
+    label.style.opacity=1;
+    label.style.left=(mx-110)+"px";
+    label.style.top=(my-20)+"px";
+  } else {
+    label.style.opacity=0;
+  }
 
   requestAnimationFrame(draw);
 }
