@@ -1662,53 +1662,50 @@ body.dog .fc-note{color:#2d1800;background:rgba(255,220,150,.2);}
 <style>
 .starmap-sec {
   position: relative;
-  height: 500px;
+  height: 520px;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 40%, #020617, #000);
+  background: #000;
+  cursor: grab;
 }
 
-/* Canvas fills section */
-.starmap-canvas {
-  position: absolute;
-  inset: 0;
+canvas {
   width: 100%;
   height: 100%;
-}
-
-/* Text overlay */
-.starmap-ui {
-  position: absolute;
-  bottom: 20px;
-  width: 100%;
-  text-align: center;
-  color: #cbd5f5;
-  font-family: 'Segoe UI', sans-serif;
+  display: block;
 }
 
 .label {
   position: absolute;
-  left: 45%;
-  top: 45%;
   color: #ffd6ec;
+  font-family: 'Segoe UI', sans-serif;
   font-size: 18px;
-  transform: translate(-50%, -50%);
   pointer-events: none;
-  text-shadow: 0 0 10px rgba(255, 200, 240, 0.7);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  text-shadow: 0 0 12px rgba(255,200,240,0.9);
+}
+
+.caption {
+  position: absolute;
+  bottom: 15px;
+  width: 100%;
+  text-align: center;
+  color: #cbd5f5;
+  font-size: 14px;
 }
 </style>
 
-<canvas class="starmap-canvas"></canvas>
+<canvas id="space"></canvas>
+<div id="label" class="label">✨ She's here ✨</div>
 
-<div class="label">✨ She's here ✨</div>
-
-<div class="starmap-ui">
-  <div>10 Apr 2000 · 00:00 IST</div>
-  <div style="color:#fbbf24;">♡ forever written in the stars</div>
-  <div>∞ watching over always</div>
+<div class="caption">
+  10 Apr 2000 · 00:00 IST · 
+  <span style="color:#fbbf24;">♡ forever written in the stars</span> · 
+  ∞ watching over always
 </div>
 
 <script>
-const canvas = document.querySelector(".starmap-canvas");
+const canvas = document.getElementById("space");
 const ctx = canvas.getContext("2d");
 
 let w, h;
@@ -1719,106 +1716,161 @@ function resize() {
 resize();
 window.addEventListener("resize", resize);
 
-/* ⭐ STARFIELD */
-let stars = [];
-for (let i = 0; i < 300; i++) {
-  stars.push({
-    x: Math.random() * w,
-    y: Math.random() * h,
-    z: Math.random() * w,
-  });
-}
+/* 🌍 ROTATION */
+let rotY = 0;
+let isDragging = false;
+let lastX = 0;
 
-/* 💫 NEBULA CLOUD */
-function drawNebula() {
-  let gradient = ctx.createRadialGradient(
-    w * 0.6, h * 0.5, 50,
-    w * 0.6, h * 0.5, 300
-  );
-  gradient.addColorStop(0, "rgba(120, 80, 255, 0.25)");
-  gradient.addColorStop(0.5, "rgba(255, 100, 200, 0.15)");
-  gradient.addColorStop(1, "transparent");
+canvas.addEventListener("mousedown", e => {
+  isDragging = true;
+  lastX = e.clientX;
+});
+window.addEventListener("mouseup", () => isDragging = false);
 
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, w, h);
-}
-
-/* 🌕 MOON */
-function drawMoon() {
-  let x = w * 0.75;
-  let y = h * 0.65;
-
-  let glow = ctx.createRadialGradient(x, y, 20, x, y, 120);
-  glow.addColorStop(0, "rgba(255,240,180,0.8)");
-  glow.addColorStop(1, "rgba(255,240,180,0)");
-
-  ctx.fillStyle = glow;
-  ctx.beginPath();
-  ctx.arc(x, y, 120, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = "#ddd6c5";
-  ctx.beginPath();
-  ctx.arc(x, y, 60, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-/* 🌠 SHOOTING STAR */
-let shootingStars = [];
-
-function spawnShootingStar() {
-  shootingStars.push({
-    x: Math.random() * w,
-    y: 0,
-    len: Math.random() * 80 + 50,
-    speed: Math.random() * 6 + 4
-  });
-}
-
-setInterval(spawnShootingStar, 4000);
-
-/* 🎮 MOUSE PARALLAX */
-let mouseX = 0, mouseY = 0;
-
-canvas.addEventListener("mousemove", e => {
-  mouseX = (e.clientX / w - 0.5) * 2;
-  mouseY = (e.clientY / h - 0.5) * 2;
+window.addEventListener("mousemove", e => {
+  if (isDragging) {
+    let dx = e.clientX - lastX;
+    rotY += dx * 0.005;
+    lastX = e.clientX;
+  }
 });
 
-/* 🎬 ANIMATION LOOP */
-function animate() {
-  ctx.fillStyle = "rgba(0,0,0,0.4)";
+/* 📱 GYROSCOPE */
+if (window.DeviceOrientationEvent) {
+  window.addEventListener("deviceorientation", e => {
+    if (e.gamma) {
+      rotY = e.gamma * 0.02;
+    }
+  });
+}
+
+/* ⭐ STAR SPHERE */
+let stars = [];
+for (let i = 0; i < 900; i++) {
+  let t = Math.random() * Math.PI * 2;
+  let p = Math.acos((Math.random() * 2) - 1);
+
+  stars.push({
+    x: Math.sin(p) * Math.cos(t),
+    y: Math.sin(p) * Math.sin(t),
+    z: Math.cos(p)
+  });
+}
+
+/* 🌌 MILKY WAY BAND */
+let milky = [];
+for (let i = 0; i < 300; i++) {
+  let angle = Math.random() * Math.PI * 2;
+  milky.push({
+    x: Math.cos(angle),
+    y: (Math.random() - 0.5) * 0.2,
+    z: Math.sin(angle)
+  });
+}
+
+/* 🌕 + 💜 */
+const moon = { x: 0, y: 0, z: 1 };
+const nebula = { x: 0, y: 0, z: -1 };
+
+/* 🌠 Shooting stars */
+let shooting = [];
+setInterval(() => {
+  shooting.push({
+    x: Math.random() * w,
+    y: 0,
+    len: 80,
+    speed: 6
+  });
+}, 4000);
+
+/* 🔄 ROTATION */
+function rotateY(p, a) {
+  return {
+    x: p.x * Math.cos(a) - p.z * Math.sin(a),
+    y: p.y,
+    z: p.x * Math.sin(a) + p.z * Math.cos(a)
+  };
+}
+
+/* 🎬 DRAW */
+function draw() {
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
   ctx.fillRect(0, 0, w, h);
 
-  drawNebula();
+  /* ⭐ Stars */
+  stars.forEach(s => {
+    let r = rotateY(s, rotY);
+    if (r.z > 0) {
+      let px = r.x * 320 + w/2;
+      let py = r.y * 320 + h/2;
+      let size = (1 - r.z) * 2;
 
-  /* Stars */
-  for (let i = 0; i < stars.length; i++) {
-    let star = stars[i];
-
-    star.z -= 1;
-
-    if (star.z <= 0) {
-      star.x = Math.random() * w;
-      star.y = Math.random() * h;
-      star.z = w;
+      ctx.fillStyle = "white";
+      ctx.fillRect(px, py, size, size);
     }
+  });
 
-    let k = 128.0 / star.z;
-    let px = (star.x - w/2) * k + w/2 + mouseX * 30;
-    let py = (star.y - h/2) * k + h/2 + mouseY * 30;
+  /* 🌌 Milky Way */
+  milky.forEach(s => {
+    let r = rotateY(s, rotY);
+    if (r.z > 0) {
+      let px = r.x * 320 + w/2;
+      let py = r.y * 320 + h/2;
 
-    let size = (1 - star.z / w) * 3;
+      ctx.fillStyle = "rgba(255,255,255,0.15)";
+      ctx.fillRect(px, py, 2, 2);
+    }
+  });
 
-    ctx.fillStyle = "white";
-    ctx.fillRect(px, py, size, size);
+  /* 💜 Nebula (back side only) */
+  let n = rotateY(nebula, rotY);
+  if (n.z > 0) {
+    let nx = n.x * 200 + w/2;
+    let ny = n.y * 200 + h/2;
+
+    let grad = ctx.createRadialGradient(nx, ny, 50, nx, ny, 350);
+    grad.addColorStop(0, "rgba(140,80,255,0.35)");
+    grad.addColorStop(0.5, "rgba(255,100,200,0.25)");
+    grad.addColorStop(1, "transparent");
+
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
   }
 
-  /* Shooting stars */
-  shootingStars.forEach((s, i) => {
-    ctx.strokeStyle = "rgba(255,255,255,0.8)";
-    ctx.lineWidth = 2;
+  /* 🌕 Moon */
+  let m = rotateY(moon, rotY);
+  let label = document.getElementById("label");
 
+  if (m.z > 0) {
+    let mx = m.x * 260 + w/2;
+    let my = m.y * 260 + h/2;
+
+    let g = ctx.createRadialGradient(mx, my, 10, mx, my, 140);
+    g.addColorStop(0, "rgba(255,240,180,0.9)");
+    g.addColorStop(1, "rgba(255,240,180,0)");
+
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(mx, my, 140, 0, Math.PI*2);
+    ctx.fill();
+
+    ctx.fillStyle = "#ddd6c5";
+    ctx.beginPath();
+    ctx.arc(mx, my, 65, 0, Math.PI*2);
+    ctx.fill();
+
+    /* TEXT LOCK */
+    label.style.opacity = 1;
+    label.style.left = (mx - 120) + "px";
+    label.style.top = (my - 20) + "px";
+
+  } else {
+    label.style.opacity = 0;
+  }
+
+  /* 🌠 Shooting stars */
+  shooting.forEach((s, i) => {
+    ctx.strokeStyle = "white";
     ctx.beginPath();
     ctx.moveTo(s.x, s.y);
     ctx.lineTo(s.x - s.len, s.y - s.len);
@@ -1827,15 +1879,13 @@ function animate() {
     s.x += s.speed;
     s.y += s.speed;
 
-    if (s.y > h) shootingStars.splice(i, 1);
+    if (s.y > h) shooting.splice(i,1);
   });
 
-  drawMoon();
-
-  requestAnimationFrame(animate);
+  requestAnimationFrame(draw);
 }
 
-animate();
+draw();
 </script>
 
 </section>
