@@ -1749,9 +1749,65 @@ for (let i = 0; i < 800; i++) {
   });
 }
 
+/* SHOOTING STARS WITH DEPTH */
+class ShootingStar {
+  constructor() {
+    this.reset();
+  }
+  reset() {
+    this.z = Math.random() * 0.8 + 0.2; // depth 0.2 (far) to 1 (near)
+    this.x = Math.random() * w;
+    this.y = Math.random() * h * 0.5;  // upper half of canvas
+    this.len = (this.z * 100) + 30;    // longer if nearer
+    this.speed = this.z * 20 + 5;      // faster if nearer
+    this.size = this.z * 1.8 + 0.3;    // bigger if nearer
+    this.alpha = this.z * 0.9 + 0.1;   // brighter if nearer
+    this.fade = 0.008 + Math.random() * 0.01;
+  }
+  update() {
+    this.x += this.speed;
+    this.y += this.speed * 0.3;
+    this.alpha -= this.fade;
+    if(this.alpha <= 0 || this.x > w || this.y > h) this.reset();
+  }
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    let grad = ctx.createLinearGradient(this.x, this.y, this.x - this.len, this.y - this.len * 0.3);
+    grad.addColorStop(0, 'rgba(255,255,255,' + this.alpha + ')');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = this.size;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.lineTo(this.x - this.len, this.y - this.len * 0.3);
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+let shootingStars = [];
+const shootingStarCount = 4; // ~2 per second at 60fps
+
+for(let i=0; i<shootingStarCount; i++){
+  shootingStars.push(new ShootingStar());
+}
+
 /* 🌕 LOAD YOUR MOON IMAGE */
 const moonImg = new Image();
-moonImg.src = "MOON.PNG.webp"; // 🔥 replace if needed
+let moonLoaded = false;
+
+moonImg.onload = () => {
+  moonLoaded = true;
+};
+moonImg.src = "MOON.PNG.webp"; // your moon image path
+
+/* 🌌 LOAD NEBULA IMAGE */
+const nebulaImg = new Image();
+let nebulaLoaded = false;
+nebulaImg.onload = () => {
+  nebulaLoaded = true;
+};
+nebulaImg.src = "21526.jpg"; // your nebula image path
 
 /* POSITIONS */
 const moon = {x:0,y:0,z:1};
@@ -1766,47 +1822,57 @@ function rotateY(p,a){
   }
 }
 
-/* 💜 NEBULA */
+/* 💜 DRAW NEBULA IMAGE */
 function drawNebula(nx,ny){
-  let g = ctx.createRadialGradient(nx,ny,40,nx,ny,320);
-  g.addColorStop(0,"rgba(120,80,255,0.25)");
-  g.addColorStop(0.4,"rgba(200,100,255,0.15)");
-  g.addColorStop(0.7,"rgba(255,120,180,0.1)");
-  g.addColorStop(1,"transparent");
-
-  ctx.fillStyle = g;
-  ctx.fillRect(0,0,w,h);
+  if(!nebulaLoaded) return;
+  const nebulaSize = 400;
+  ctx.save();
+  ctx.globalAlpha = 0.25;  // subtle transparency
+  ctx.translate(nx - nebulaSize/2, ny - nebulaSize/2);
+  ctx.drawImage(nebulaImg, 0, 0, nebulaSize, nebulaSize);
+  ctx.restore();
 }
 
 /* 🌕 DRAW IMAGE MOON */
 function drawMoon(mx,my){
   const size = 120;
 
-  // glow
-  let glow = ctx.createRadialGradient(mx,my,20,mx,my,160);
-  glow.addColorStop(0,"rgba(255,240,180,0.4)");
+  // very minimal glow (subtle)
+  let glow = ctx.createRadialGradient(mx,my,20,mx,my,80);
+  glow.addColorStop(0,"rgba(255,240,180,0.1)");
   glow.addColorStop(1,"rgba(255,240,180,0)");
   ctx.fillStyle = glow;
   ctx.beginPath();
-  ctx.arc(mx,my,160,0,Math.PI*2);
+  ctx.arc(mx,my,80,0,Math.PI*2);
   ctx.fill();
 
-  // image
+  // clip moon shape circle and draw image
   ctx.save();
   ctx.beginPath();
   ctx.arc(mx,my,size/2,0,Math.PI*2);
   ctx.closePath();
   ctx.clip();
 
-  ctx.drawImage(moonImg, mx-size/2, my-size/2, size, size);
+  if(moonLoaded){
+    ctx.drawImage(moonImg, mx-size/2, my-size/2, size, size);
+  }
+
+  // subtle dark side shading (realism boost)
+  let shade = ctx.createLinearGradient(mx-60, my, mx+60, my);
+  shade.addColorStop(0, "rgba(0,0,0,0.4)");
+  shade.addColorStop(1, "rgba(0,0,0,0)");
+
+  ctx.fillStyle = shade;
+  ctx.beginPath();
+  ctx.arc(mx, my, size/2, 0, Math.PI*2);
+  ctx.fill();
 
   ctx.restore();
 }
 
 /* DRAW LOOP */
 function draw(){
-  ctx.fillStyle="rgba(0,0,0,0.6)";
-  ctx.fillRect(0,0,w,h);
+  ctx.clearRect(0,0,w,h);
 
   /* stars */
   stars.forEach(s=>{
@@ -1820,6 +1886,12 @@ function draw(){
       ctx.arc(px,py,s.size,0,Math.PI*2);
       ctx.fill();
     }
+  });
+
+  /* shooting stars */
+  shootingStars.forEach(s=>{
+    s.update();
+    s.draw();
   });
 
   /* nebula */
