@@ -1658,120 +1658,151 @@ body.dog .fc-note{color:#2d1800;background:rgba(255,220,150,.2);}
 
 <!-- ═══════════════════════ STAR MAP ═══════════════════════ -->
 <section class="starmap-sec">
+
+  <style>
+    .constellation-svg {
+      background: radial-gradient(circle at 60% 40%, #020617 0%, #000 100%);
+    }
+
+    /* ⭐ Stars only */
+    .star {
+      fill: #fff;
+      animation: twinkle 3s infinite ease-in-out alternate;
+    }
+
+    .star:nth-child(odd) {
+      animation-duration: 2.5s;
+    }
+
+    .star:nth-child(even) {
+      animation-duration: 4s;
+    }
+
+    @keyframes twinkle {
+      from { opacity: 0.4; }
+      to { opacity: 1; }
+    }
+
+    /* 🌕 Moon glow only */
+    .moon-glow {
+      animation: moonPulse 6s ease-in-out infinite alternate;
+      transform-origin: center;
+    }
+
+    @keyframes moonPulse {
+      from { transform: scale(1); opacity: 0.85; }
+      to { transform: scale(1.04); opacity: 1; }
+    }
+  </style>
+
   <div class="starmap-wrap rv d3">
-  <svg viewBox="0 0 620 420" class="constellation-svg">
-    <!-- REALISTIC MOON -->
-<defs>
-  <!-- Base surface gradient -->
-  <radialGradient id="moonSurface" cx="35%" cy="35%" r="65%">
-    <stop offset="0%" stop-color="#fffdf4"/>
-    <stop offset="40%" stop-color="#f4f1e6"/>
-    <stop offset="75%" stop-color="#d6d1c4"/>
-    <stop offset="100%" stop-color="#bfb8a6"/>
-  </radialGradient>
+    <svg viewBox="0 0 620 420" class="constellation-svg">
 
-  <!-- Shadow gradient (terminator) -->
-  <radialGradient id="moonShadow" cx="75%" cy="65%" r="70%">
-    <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
-    <stop offset="100%" stop-color="rgba(0,0,0,0.65)"/>
-  </radialGradient>
+      <defs>
+        <!-- Moon surface -->
+        <radialGradient id="moonSurface" cx="30%" cy="30%" r="70%">
+          <stop offset="0%" stop-color="#fffdf7"/>
+          <stop offset="40%" stop-color="#e8e3d3"/>
+          <stop offset="75%" stop-color="#cfc8b8"/>
+          <stop offset="100%" stop-color="#a8a08d"/>
+        </radialGradient>
 
-  <!-- Glow -->
-  <radialGradient id="moonGlowReal" cx="50%" cy="50%" r="50%">
-    <stop offset="0%" stop-color="#fff6cc" stop-opacity="0.25"/>
-    <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
-  </radialGradient>
+        <!-- Shadow -->
+        <radialGradient id="moonShadow" cx="75%" cy="65%" r="70%">
+          <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+          <stop offset="100%" stop-color="rgba(0,0,0,0.75)"/>
+        </radialGradient>
 
-  <!-- Noise texture -->
-  <filter id="moonTexture">
-    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
-    <feColorMatrix type="saturate" values="0"/>
-    <feComponentTransfer>
-      <feFuncA type="table" tableValues="0 0.15"/>
-    </feComponentTransfer>
-  </filter>
+        <!-- Glow -->
+        <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fff6cc" stop-opacity="0.25"/>
+          <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+        </radialGradient>
 
-  <!-- Soft blur for glow -->
-  <filter id="softBlur">
-    <feGaussianBlur stdDeviation="8"/>
-  </filter>
-</defs>
+        <!-- Texture -->
+        <filter id="moonTexture">
+          <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4"/>
+          <feColorMatrix type="saturate" values="0"/>
+          <feComponentTransfer>
+            <feFuncA type="table" tableValues="0 0.12"/>
+          </feComponentTransfer>
+        </filter>
 
-<!-- Glow -->
-<circle cx="450" cy="280" r="75" fill="url(#moonGlowReal)" filter="url(#softBlur)"/>
+        <filter id="blur">
+          <feGaussianBlur stdDeviation="6"/>
+        </filter>
 
-<!-- Base moon -->
-<circle cx="450" cy="280" r="60" fill="url(#moonSurface)"/>
+        <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+          <polygon points="0 0, 10 3, 0 6" fill="#ffb3d9"/>
+        </marker>
+      </defs>
 
-<!-- Texture overlay -->
-<circle cx="450" cy="280" r="60" filter="url(#moonTexture)" opacity="0.4"/>
+      <!-- 🌕 Moon -->
+      <circle cx="450" cy="280" r="80" fill="url(#moonGlow)" filter="url(#blur)" class="moon-glow"/>
+      <circle cx="450" cy="280" r="60" fill="url(#moonSurface)"/>
+      <circle cx="450" cy="280" r="60" filter="url(#moonTexture)" opacity="0.35"/>
+      <circle cx="450" cy="280" r="60" fill="url(#moonShadow)"/>
 
-<!-- Shadow (gives phase realism) -->
-<circle cx="450" cy="280" r="60" fill="url(#moonShadow)"/>
+      <!-- Craters -->
+      <g>
+        <circle cx="430" cy="265" r="8" fill="#bfb8a6"/>
+        <circle cx="430" cy="265" r="6" fill="#d9d3c3"/>
 
-<!-- Craters (subtle, layered) -->
-<g opacity="0.35">
-  <circle cx="430" cy="265" r="6" fill="#cfc8b8"/>
-  <circle cx="470" cy="300" r="5" fill="#d8d2c2"/>
-  <circle cx="455" cy="315" r="4" fill="#c9c3b2"/>
-  <circle cx="445" cy="290" r="3" fill="#bfb8a6"/>
-</g>
-    
-    <!-- Orion Constellation -->
-    <circle cx="150" cy="80" r="2" fill="#fff" opacity="0.9"/>
-    <circle cx="170" cy="100" r="2.5" fill="#fff" opacity="1"/>
-    <circle cx="180" cy="140" r="2" fill="#fff" opacity="0.9"/>
-    <circle cx="165" cy="170" r="2" fill="#fff" opacity="0.85"/>
-    <circle cx="145" cy="180" r="1.5" fill="#fff" opacity="0.8"/>
-    <circle cx="130" cy="160" r="2" fill="#fff" opacity="0.9"/>
-    <circle cx="140" cy="120" r="2.5" fill="#ffeb3b" opacity="1"/>
-    
-    <line x1="150" y1="80" x2="170" y2="100" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="170" y1="100" x2="180" y2="140" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="180" y1="140" x2="165" y2="170" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="140" y1="120" x2="170" y2="100" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="130" y1="160" x2="165" y2="170" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    
-    <!-- Big Dipper -->
-    <circle cx="380" cy="110" r="2" fill="#fff" opacity="0.9"/>
-    <circle cx="420" cy="100" r="2" fill="#fff" opacity="0.9"/>
-    <circle cx="460" cy="105" r="2.5" fill="#fff" opacity="1"/>
-    <circle cx="480" cy="130" r="2" fill="#fff" opacity="0.9"/>
-    <circle cx="450" cy="150" r="2" fill="#fff" opacity="0.85"/>
-    <circle cx="420" cy="145" r="2" fill="#fff" opacity="0.85"/>
-    <circle cx="390" cy="140" r="2" fill="#fff" opacity="0.85"/>
-    
-    <line x1="380" y1="110" x2="420" y2="100" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="420" y1="100" x2="460" y2="105" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="460" y1="105" x2="480" y2="130" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="480" y1="130" x2="450" y2="150" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="450" y1="150" x2="420" y2="145" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="420" y1="145" x2="390" y2="140" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    <line x1="390" y1="140" x2="420" y2="100" stroke="#fff" stroke-width="0.5" opacity="0.4"/>
-    
-    <!-- Scattered stars -->
-    <circle cx="100" cy="50" r="1" fill="#fff" opacity="0.7"/>
-    <circle cx="250" cy="70" r="1.5" fill="#fff" opacity="0.8"/>
-    <circle cx="300" cy="60" r="1" fill="#fff" opacity="0.6"/>
-    <circle cx="350" cy="90" r="1" fill="#fff" opacity="0.7"/>
-    <circle cx="500" cy="80" r="1.5" fill="#fff" opacity="0.8"/>
-    <circle cx="550" cy="100" r="1" fill="#fff" opacity="0.7"/>
-    <circle cx="580" cy="150" r="1" fill="#fff" opacity="0.6"/>
-    <circle cx="520" cy="200" r="1" fill="#fff" opacity="0.7"/>
-    <circle cx="200" cy="250" r="1" fill="#fff" opacity="0.6"/>
-    <circle cx="400" cy="280" r="1.5" fill="#fff" opacity="0.8"/>
-    <circle cx="100" cy="300" r="1" fill="#fff" opacity="0.7"/>
-    
-    <!-- Arrow & text -->
-    <path d="M 340 240 Q 380 260 420 270" stroke="#ffb3d9" stroke-width="2" fill="none" marker-end="url(#arrowhead)" opacity="0.8"/>
-    <text x="280" y="235" font-family="'Segoe UI', sans-serif" font-size="18" fill="#ffb3d9" font-weight="600" text-anchor="end">✨ She's here ✨</text>
-  </svg>
-  <div class="starmap-caption">
-    <span class="sm-coord">10 Apr 2000 &nbsp;·&nbsp; 00:00 IST</span>
-    <span class="sm-star-label">♡ forever written in the stars</span>
-    <span class="sm-coord">∞ &nbsp;·&nbsp; watching over always</span>
+        <circle cx="470" cy="300" r="7" fill="#bfb8a6"/>
+        <circle cx="470" cy="300" r="5" fill="#e2ddcf"/>
+
+        <circle cx="455" cy="315" r="6" fill="#bfb8a6"/>
+        <circle cx="455" cy="315" r="4" fill="#d6d0bf"/>
+
+        <circle cx="445" cy="290" r="5" fill="#a8a08d"/>
+        <circle cx="445" cy="290" r="3" fill="#dcd6c7"/>
+      </g>
+
+      <!-- ⭐ Stars -->
+      <circle class="star" cx="150" cy="80" r="2"/>
+      <circle class="star" cx="170" cy="100" r="2.5"/>
+      <circle class="star" cx="180" cy="140" r="2"/>
+      <circle class="star" cx="165" cy="170" r="2"/>
+      <circle class="star" cx="145" cy="180" r="1.5"/>
+      <circle class="star" cx="130" cy="160" r="2"/>
+
+      <circle class="star" cx="380" cy="110" r="2"/>
+      <circle class="star" cx="420" cy="100" r="2"/>
+      <circle class="star" cx="460" cy="105" r="2.5"/>
+
+      <circle class="star" cx="100" cy="50" r="1"/>
+      <circle class="star" cx="300" cy="60" r="1"/>
+      <circle class="star" cx="500" cy="80" r="1.5"/>
+      <circle class="star" cx="200" cy="250" r="1"/>
+
+      <!-- Lines -->
+      <line x1="150" y1="80" x2="170" y2="100" stroke="#fff" opacity="0.3"/>
+      <line x1="170" y1="100" x2="180" y2="140" stroke="#fff" opacity="0.3"/>
+
+      <!-- Arrow -->
+      <path d="M 340 240 Q 380 260 420 270"
+            stroke="#ffb3d9"
+            stroke-width="2"
+            fill="none"
+            marker-end="url(#arrowhead)"/>
+
+      <text x="280" y="235"
+            font-family="Segoe UI"
+            font-size="18"
+            fill="#ffb3d9"
+            font-weight="600"
+            text-anchor="end">
+        ✨ She's here ✨
+      </text>
+
+    </svg>
+
+    <div class="starmap-caption">
+      <span class="sm-coord">10 Apr 2000 · 00:00 IST</span>
+      <span class="sm-star-label">♡ forever written in the stars</span>
+      <span class="sm-coord">∞ · watching over always</span>
+    </div>
   </div>
-</div>
 </section>
 
 
