@@ -1660,15 +1660,62 @@ body.dog .fc-note{color:#2d1800;background:rgba(255,220,150,.2);}
 <section class="starmap-sec">
   <div class="starmap-wrap rv d3">
   <svg viewBox="0 0 620 420" class="constellation-svg">
-    <defs>
-      <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
-        <stop offset="0%" style="stop-color:#fff9e6;stop-opacity:0.4" />
-        <stop offset="100%" style="stop-color:#ffd700;stop-opacity:0" />
-      </radialGradient>
-      <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-        <polygon points="0 0, 10 3, 0 6" fill="#ffb3d9"/>
-      </marker>
-    </defs>
+    <!-- REALISTIC MOON -->
+<defs>
+  <!-- Base surface gradient -->
+  <radialGradient id="moonSurface" cx="35%" cy="35%" r="65%">
+    <stop offset="0%" stop-color="#fffdf4"/>
+    <stop offset="40%" stop-color="#f4f1e6"/>
+    <stop offset="75%" stop-color="#d6d1c4"/>
+    <stop offset="100%" stop-color="#bfb8a6"/>
+  </radialGradient>
+
+  <!-- Shadow gradient (terminator) -->
+  <radialGradient id="moonShadow" cx="75%" cy="65%" r="70%">
+    <stop offset="0%" stop-color="rgba(0,0,0,0)"/>
+    <stop offset="100%" stop-color="rgba(0,0,0,0.65)"/>
+  </radialGradient>
+
+  <!-- Glow -->
+  <radialGradient id="moonGlowReal" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#fff6cc" stop-opacity="0.25"/>
+    <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+  </radialGradient>
+
+  <!-- Noise texture -->
+  <filter id="moonTexture">
+    <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch"/>
+    <feColorMatrix type="saturate" values="0"/>
+    <feComponentTransfer>
+      <feFuncA type="table" tableValues="0 0.15"/>
+    </feComponentTransfer>
+  </filter>
+
+  <!-- Soft blur for glow -->
+  <filter id="softBlur">
+    <feGaussianBlur stdDeviation="8"/>
+  </filter>
+</defs>
+
+<!-- Glow -->
+<circle cx="450" cy="280" r="75" fill="url(#moonGlowReal)" filter="url(#softBlur)"/>
+
+<!-- Base moon -->
+<circle cx="450" cy="280" r="60" fill="url(#moonSurface)"/>
+
+<!-- Texture overlay -->
+<circle cx="450" cy="280" r="60" filter="url(#moonTexture)" opacity="0.4"/>
+
+<!-- Shadow (gives phase realism) -->
+<circle cx="450" cy="280" r="60" fill="url(#moonShadow)"/>
+
+<!-- Craters (subtle, layered) -->
+<g opacity="0.35">
+  <circle cx="430" cy="265" r="6" fill="#cfc8b8"/>
+  <circle cx="470" cy="300" r="5" fill="#d8d2c2"/>
+  <circle cx="455" cy="315" r="4" fill="#c9c3b2"/>
+  <circle cx="445" cy="290" r="3" fill="#bfb8a6"/>
+</g>
     
     <!-- Orion Constellation -->
     <circle cx="150" cy="80" r="2" fill="#fff" opacity="0.9"/>
